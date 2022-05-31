@@ -1,10 +1,9 @@
 import 'dart:io';
 import 'dart:ui';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:path_provider/path_provider.dart' as path;
 
 class Utils {
   static final TextEditingController _qrData = TextEditingController();
@@ -20,9 +19,11 @@ class Utils {
     final byData = await render.toByteData(format: ImageByteFormat.png);
     if (byData == null) return;
     final buffer8 = byData.buffer.asUint8List();
-    final dir = await getApplicationDocumentsDirectory();
+    final dir = await path.getExternalStorageDirectories(
+        type: path.StorageDirectory.pictures);
     final name = DateTime.now().toString();
-    final file = File("${dir.path}/$name.png");
+    if (dir == null) return;
+    final file = File("${dir.first.path}/$name.png");
     file.writeAsBytesSync(buffer8);
     print(dir);
     print(file.path);
