@@ -1,11 +1,17 @@
+import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter_barcode_scanner/flutter_barcode_scanner.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Utils {
-  static capture(GlobalKey? key) async {
+  static final TextEditingController _qrData = TextEditingController();
+
+  TextEditingController get qrData => _qrData;
+
+  static capture(GlobalKey? key, BuildContext context) async {
     if (key == null) return;
     final renderObject =
         key.currentContext!.findRenderObject() as RenderRepaintBoundary?;
@@ -15,14 +21,32 @@ class Utils {
     if (byData == null) return;
     final buffer8 = byData.buffer.asUint8List();
     final dir = await getApplicationDocumentsDirectory();
-    final path = dir.path;
-    print(path);
+    final name = DateTime.now().toString();
+    final file = File("${dir.path}/$name.png");
+    file.writeAsBytesSync(buffer8);
+    print(dir);
+    print(file.path);
+
+    showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            content: Image.file(file),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: const Text("Sair"))
+            ],
+          );
+        });
   }
 
   static Future<void> scanCode() async {
-    final codeScanner = await FlutterBarcodeScanner.scanBarcode(
+    await FlutterBarcodeScanner.scanBarcode(
             "#ff6666", "Cancel", true, ScanMode.QR)
-        .then((value) => value)
+        .then((value) => _qrData.text = value)
         .catchError((onError) {
       print(onError.toString());
     });
